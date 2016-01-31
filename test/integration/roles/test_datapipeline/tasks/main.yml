@@ -1,0 +1,93 @@
+---
+- include_vars: ../files/test_pipeline.json
+
+- name: create new pipeline
+  datapipeline:
+    name: "{{test_datapipeline_dp_name}}"
+    version: "{{pipelineVersion}}"
+    objects: "{{pipelineObjects}}"
+    parameters: "{{parameterObjects}}"
+    values: "{{parameterValues}}"
+    state: present
+    region: "{{ec2_region}}"
+    ec2_access_key: "{{ec2_access_key}}"
+    ec2_secret_key: "{{ec2_secret_key}}"
+  register: pipeline_v1
+
+- assert:
+    that:
+      - pipeline_v1|changed
+      - pipeline_v1.result.id
+
+- name: creating same pipeline should be idempotent
+  datapipeline:
+    name: "{{test_datapipeline_dp_name}}"
+    version: "{{pipelineVersion}}"
+    objects: "{{pipelineObjects}}"
+    parameters: "{{parameterObjects}}"
+    values: "{{parameterValues}}"
+    state: present
+    region: "{{ec2_region}}"
+    ec2_access_key: "{{ec2_access_key}}"
+    ec2_secret_key: "{{ec2_secret_key}}"
+  register: pipeline_v1
+
+- assert:
+    that:
+      - not pipeline_v1|changed
+
+- name: activate pipeline
+  datapipeline:
+    name: "{{test_datapipeline_dp_name}}"
+    state: active
+    region: "{{ec2_region}}"
+    ec2_access_key: "{{ec2_access_key}}"
+    ec2_secret_key: "{{ec2_secret_key}}"
+
+- name: deactivate pipeline
+  datapipeline:
+    name: "{{test_datapipeline_dp_name}}"
+    state: deactive
+    region: "{{ec2_region}}"
+    ec2_access_key: "{{ec2_access_key}}"
+    ec2_secret_key: "{{ec2_secret_key}}"
+
+- name: update pipeline with new version
+  datapipeline:
+    name: "{{test_datapipeline_dp_name}}"
+    version: 2.0
+    objects: "{{pipelineObjects}}"
+    parameters: "{{parameterObjects}}"
+    values: "{{parameterValues}}"
+    state: present
+    region: "{{ec2_region}}"
+    ec2_access_key: "{{ec2_access_key}}"
+    ec2_secret_key: "{{ec2_secret_key}}"
+  register: pipeline_v2
+
+- assert:
+    that:
+      - pipeline_v2|changed
+      - pipeline_v2.result.id
+
+- name: delete pipeline
+  datapipeline:
+    name: "{{test_datapipeline_dp_name}}"
+    state: absent
+    region: "{{ec2_region}}"
+    ec2_access_key: "{{ec2_access_key}}"
+    ec2_secret_key: "{{ec2_secret_key}}"
+
+- name: activate non existing pipeline
+  datapipeline:
+    name: "{{test_datapipeline_dp_name}}"
+    state: deactive
+    region: "{{ec2_region}}"
+    ec2_access_key: "{{ec2_access_key}}"
+    ec2_secret_key: "{{ec2_secret_key}}"
+  ignore_errors: yes
+  register: result
+
+- assert:
+    that:
+      - result|failed
