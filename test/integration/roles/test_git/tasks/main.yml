@@ -412,3 +412,7 @@
     repo: '{{ checkout_dir}}/repo'
     version: 'new-branch'
     dest: '{{ checkout_dir }}/checkout'
+
+# Test that git reset and git clean files work
+
+- include: test_git_clean.yml
